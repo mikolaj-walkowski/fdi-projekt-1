@@ -2,18 +2,16 @@
 
 ### Dependencies
 - CMake w wersji co najmniej 3.14
-- Kompilator obsługujący standard C++14
+- Kompilator obsługujący standard C++14 (na pewno działają Visual C++ oraz MinGW na Windowsie)
 
 ### Budowanie projektu
-Skrypty do budowania oraz uruchamiania programu znajdują się w folderze `./scripts`
-Do budowania programu można także użyć poleceń:
-```
-cd out
-cmake ..
-cmake --build .
-```
-Pierwsza kompilacja będzie trwała dość długo, bo CMake będzie zaciągał kilka bibliotek z Githuba.
-Gotowy program znajdziemy w folderze `./out/Debug`.
+
+Najpierw musimy zgenerować pliki do projektu. Polecam zrobić to w innym folderze niż folder w którym mamy repo, bo CMake zaśmieci ten folder różnymi plikami potrzebnymi do kompilacji.
+
+- Kompilator Visual C++: `cmake ścieżka-do-repo`
+- MinGW: `cmake -G "MinGW Makefiles" -D CMAKE_C_COMPILER=gcc -D CMAKE_CXX_COMPILER=g++ ścieżka-do-repo`
+
+Kompilujemy używając komendy `cmake --build ścieżka-do-projektu`. Pierwsza kompilacja może potrwać dość długo, bo CMake będzie zaciągać potrzebne biblioteki z GitHuba.
 
 ### Użyte biblioteki
 - [GLM](https://github.com/g-truc/glm) (wektory)

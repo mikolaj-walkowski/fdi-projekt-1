@@ -5,9 +5,9 @@ project(FdiProjekt1)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-#--------------Zaci筭amy biblioteki z Githuba-----------------
+#--------------Zaci膮gamy biblioteki z Githuba-----------------
 
-# Biblioteka do wektor體
+# Biblioteka do wektor贸w
 FetchContent_Declare(
   glm
   GIT_REPOSITORY "https://github.com/g-truc/glm"
@@ -24,7 +24,7 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-# Biblioteka do 砤dowania OpenGLa + nag丑wki do OpenGLa
+# Biblioteka do 艂adowania OpenGLa + nag艂贸wki do OpenGLa
 FetchContent_Declare(
   glad
   GIT_REPOSITORY "https://github.com/Dav1dde/glad"
@@ -33,19 +33,28 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(glm glfw glad)
 
-#-----------------Kod 焤骴硂wy---------------------
+#-----------------Kod 藕r贸d艂owy---------------------
 
-# Folder z plikami nag丑wkowymi
+# Folder z plikami nag艂贸wkowymi
 include_directories(source)
 include_directories(source/imgui)
 
-# Z砮, niedobre!
-# Rekurencyjnie znajdujemy wszystkie pliki o rozszerzeniach .cpp
-# w folderze source/ i dodajemy je do kompilacji.
-file(GLOB_RECURSE SOURCES "./source/*.cpp")
-add_executable(${CMAKE_PROJECT_NAME} ${SOURCES})
+set(
+	IMGUI_SOURCES
+	source/imgui/imgui.cpp
+	source/imgui/imgui_demo.cpp
+	source/imgui/imgui_draw.cpp
+	source/imgui/imgui_impl_glfw.cpp
+	source/imgui/imgui_impl_opengl3.cpp
+	source/imgui/imgui_widgets.cpp
+)
+set(
+	PROJECT_SOURCES
+	source/main.cpp
+)
+add_executable(${CMAKE_PROJECT_NAME} ${IMGUI_SOURCES} ${PROJECT_SOURCES})
 
-#---------------Do彻czamy biblioteki----------------
+#---------------Do艂膮czamy biblioteki----------------
 target_link_libraries(${CMAKE_PROJECT_NAME} glm)
 target_link_libraries(${CMAKE_PROJECT_NAME} glfw)
 target_link_libraries(${CMAKE_PROJECT_NAME} glad)
