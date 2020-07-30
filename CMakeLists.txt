@@ -51,6 +51,7 @@ set(
 set(
 	PROJECT_SOURCES
 	source/main.cpp
+  source/ui.cpp
 )
 add_executable(${CMAKE_PROJECT_NAME} ${IMGUI_SOURCES} ${PROJECT_SOURCES})
 
