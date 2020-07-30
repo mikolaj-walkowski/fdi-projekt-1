@@ -1,6 +1,19 @@
 #ifndef SIMULATION_HPP
 #define SIMULATION_HPP
 
+enum SimulationState 
+{
+    STOPPED, // Symulacja jeszcze nie została rozpoczęta
+    RUNNING, // Symulacja trwa
+    PAUSED   // Symulacja została tymczasowo zatrzymana z możliwością wznowienia
+};
+
+const char * const simulationStateToString[] = {
+    "STOPPED",
+    "RUNNING",
+    "PAUSED"
+};
+
 struct SimulationSettings {
     float containerWidth = 40,
           containerHeight = 250,

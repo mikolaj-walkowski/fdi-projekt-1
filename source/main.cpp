@@ -12,6 +12,7 @@
 #include <simulation.hpp>
 #include <ui.hpp>
 
+// Listenery do GLFW
 void errorCallback(int error, const char* description)
 {
     fprintf(stderr, "GLFW ERROR #%d: %s\n", error, description);
@@ -24,7 +25,7 @@ void fboSizeCallback(GLFWwindow* window, int width, int height)
     fboHeight = height;
 }
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
     // Inicjalizacja GLFW
     glfwSetErrorCallback(errorCallback);
@@ -67,33 +68,39 @@ int main(int, char**)
     #endif
 
     auto clearColor = glm::vec4(0,0,0.2,1);
+    auto state = SimulationState::STOPPED;
     SimulationSettings settings;
 
     bool simulationRunning = false;
     int simulationSpeed = 1;
 
+    //---------------------------------GŁÓWNA PĘTLA--------------------------------------
     while (!glfwWindowShouldClose(window))
     {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        
-        if(simulationRunning) 
+
+        switch(state)
         {
-            ImGui::Begin("...", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-            
-            ImGui::SliderInt("Szybkość", &simulationSpeed, 1, 4, "%dx");
-            ImGui::Button("Pauza");
-            ImGui::SameLine();
-            if(ImGui::Button("Zatrzymaj symulację")) 
-                simulationRunning = false;
-            ImGui::NewLine();
-            ImGui::End();
-        } 
-        else 
-        {
-            if(showSimulationConfigWindow(settings)) 
-                simulationRunning = true;
+            case SimulationState::STOPPED:
+            showSimulationConfigWindow(state, settings);
+            if(state == SimulationState::RUNNING) 
+            {
+                //TODO: Przygotowanie do rozpoczęcia symulacji
+            }
+            break;
+
+            case SimulationState::RUNNING:
+            //TODO: Aktualizuj stan symulacji
+            //TODO: Wyświetl cząstki i pojemnik
+            showSimulationControlWindow(state, simulationSpeed);
+            break;
+
+            case SimulationState::PAUSED:
+            //TODO: Wyświetl cząstki i pojemnik (ale nie aktualizuj stanu symulacji)
+            showSimulationControlWindow(state, simulationSpeed);
+            break;
         }
 
         ImGui::Render();

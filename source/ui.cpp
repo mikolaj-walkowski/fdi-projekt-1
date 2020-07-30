@@ -1,6 +1,8 @@
+#include <cassert>
 #include <algorithm>
 #include <imgui.h>
 #include <ui.hpp>
+#include <evil_macros.hpp>
 
 #define HEADING_COLOR ImVec4(1,1,0,1)
 
@@ -22,8 +24,10 @@ ImFont* loadFont(const std::string &fontPath, float fontSize) {
     return fontAtlas->AddFontFromFileTTF(fontPath.c_str(), fontSize, NULL, unicodeGlyphRanges);
 }
 
-bool showSimulationConfigWindow(SimulationSettings &settings) 
+void showSimulationConfigWindow(SimulationState &state, SimulationSettings &settings) 
 {
+    assertf(state == SimulationState::STOPPED, "Nieprawidłowy stan: %s", simulationStateToString[state]);
+
     const int maxNumParticles = static_cast<int>(settings.containerWidth * settings.containerHeight / 4);
     settings.numParticles = std::min(settings.numParticles, maxNumParticles);
 
@@ -53,8 +57,35 @@ bool showSimulationConfigWindow(SimulationSettings &settings)
     }
     ImGui::Separator();
     ImGui::SliderFloat("Krok symulacji", &settings.dt, 0.05f, 2, "δt = %.3f");
-    bool shouldSimulationStart = ImGui::Button("ROZPOCZNIJ SYMULACJĘ", ImVec2(ImGui::GetWindowContentRegionWidth(), 0));
+    if(ImGui::Button("ROZPOCZNIJ SYMULACJĘ", ImVec2(ImGui::GetWindowContentRegionWidth(), 0)))
+        state = SimulationState::RUNNING;
     ImGui::End();
+}
 
-    return shouldSimulationStart;
+void showSimulationControlWindow(SimulationState &state, int &speedMultiplier)
+{
+    ImGui::Begin("Przebieg symulacji", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::SliderInt("Szybkość", &speedMultiplier, 1, 4, "%dx");
+    tooltip("Zwiększa szybkość przebiegu symulacji. Nie ma to wpływu na krok czasowy oraz dokładność symulacji.");
+
+    switch(state) 
+    {
+        case SimulationState::RUNNING:
+        if(ImGui::Button("Zatrzymaj")) 
+            state = SimulationState::PAUSED;
+        tooltip("Tymczasowo wstrzymuje przebieg symulacji.");
+        break;
+
+        case SimulationState::PAUSED:
+        if(ImGui::Button("Wznów"))
+            state = SimulationState::RUNNING;
+        break;
+
+        default: assertf(false, "Nieprawidłowy stan: %s", simulationStateToString[state]);
+    }
+    ImGui::SameLine();
+    if(ImGui::Button("Zakończ symulację")) 
+        state = SimulationState::STOPPED;
+    ImGui::NewLine();
+    ImGui::End();
 }

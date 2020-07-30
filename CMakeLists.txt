@@ -40,17 +40,17 @@ include_directories(source)
 include_directories(source/imgui)
 
 set(
-	IMGUI_SOURCES
-	source/imgui/imgui.cpp
-	source/imgui/imgui_demo.cpp
-	source/imgui/imgui_draw.cpp
-	source/imgui/imgui_impl_glfw.cpp
-	source/imgui/imgui_impl_opengl3.cpp
-	source/imgui/imgui_widgets.cpp
+  IMGUI_SOURCES
+  source/imgui/imgui.cpp
+  source/imgui/imgui_demo.cpp
+  source/imgui/imgui_draw.cpp
+  source/imgui/imgui_impl_glfw.cpp
+  source/imgui/imgui_impl_opengl3.cpp
+  source/imgui/imgui_widgets.cpp
 )
 set(
-	PROJECT_SOURCES
-	source/main.cpp
+  PROJECT_SOURCES
+  source/main.cpp
   source/ui.cpp
 )
 add_executable(${CMAKE_PROJECT_NAME} ${IMGUI_SOURCES} ${PROJECT_SOURCES})

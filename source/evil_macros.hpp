@@ -2,6 +2,20 @@
 #define EVIL_MACROS_HPP
 
 #include <functional>
+#include <cassert>
+#include <cstdio>
+
+#ifdef NDEBUG
+#define assertf(condition, message, ...)
+#else 
+#define assertf(condition, message, ...)\
+    if(!(condition)) {\
+        fprintf(stderr, "Assertion failed: %s\n", #condition);\
+        fprintf(stderr, message, __VA_ARGS__);\
+        fprintf(stderr, "\n");\
+        assert(0);\
+    }
+#endif
 
 /// Rzuca error wtedy i tylko wtedy gdy condition == false.
 #define enforce(condition, error) if(!(condition)) throw error

@@ -11,8 +11,15 @@
 ImFont* loadFont(const std::string &fontPath, float fontSize);
 
 /** Wyświetla okno do konfigurowania ustawień symulacji.
- *  @return true jeśli użytkownik nacisnął przycisk "Rozpocznij symulację"
+ *  @param state stan w jakim znajduje się znaleźć symulacja
+ *  @param settings struktura do której zostaną wpisane ustawienia
  * */
-bool showSimulationConfigWindow(SimulationSettings &settings);
+void showSimulationConfigWindow(SimulationState &state, SimulationSettings &settings);
+
+/** Wyświetla okno do sterowania symulacją w trakcie jej trwania.
+ *  @param state stan w jakim znajduje się znaleźć symulacja
+ *  @param speedMultiplier mnożnik szybkości z jaką powinna być wyświetlana symulacja
+ * */
+void showSimulationControlWindow(SimulationState &state, int &speedMultiplier);
 
 #endif
