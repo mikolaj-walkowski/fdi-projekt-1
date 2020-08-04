@@ -40,7 +40,7 @@ int main(int argc, char** argv)
 
     GLFWwindow* window;
     enforce(
-        window = glfwCreateWindow(1024, 768, "FDI Projekt nr 1", nullptr, nullptr), 
+        window = glfwCreateWindow(1280, 720, "FDI Projekt nr 1", nullptr, nullptr), 
         std::runtime_error("Failed to create window!")
     );
     onExit(glfwDestroyWindow(window));
@@ -70,6 +70,8 @@ int main(int argc, char** argv)
     auto clearColor = glm::vec4(0,0,0.2,1);
     auto state = SimulationState::STOPPED;
     SimulationSettings settings;
+    Simulation simulation;
+    std::vector<glm::dvec2> results;
 
     bool simulationRunning = false;
     int simulationSpeed = 1;
@@ -87,19 +89,24 @@ int main(int argc, char** argv)
             showSimulationConfigWindow(state, settings);
             if(state == SimulationState::RUNNING) 
             {
-                //TODO: Przygotowanie do rozpoczęcia symulacji
+                simulation.init(settings);
+                results.clear();
             }
             break;
 
             case SimulationState::RUNNING:
-            //TODO: Aktualizuj stan symulacji
-            //TODO: Wyświetl cząstki i pojemnik
-            showSimulationControlWindow(state, simulationSpeed);
+            for(int i=0; i<simulationSpeed; ++i)
+            {
+                simulation.update();
+                results.push_back(glm::dvec2(simulation.time(), simulation.detectorPressure()));
+            }
+            simulation.render(*(ImGui::GetBackgroundDrawList()));
+            showSimulationControlWindow(state, simulationSpeed, results);
             break;
 
             case SimulationState::PAUSED:
-            //TODO: Wyświetl cząstki i pojemnik (ale nie aktualizuj stanu symulacji)
-            showSimulationControlWindow(state, simulationSpeed);
+            simulation.render(*(ImGui::GetBackgroundDrawList()));
+            showSimulationControlWindow(state, simulationSpeed, results);
             break;
         }
 

@@ -4,6 +4,8 @@
 #include <imgui.h>
 #include <string>
 #include <simulation.hpp>
+#include <vector>
+#include <glm/glm.hpp>
 
 /** Ładuje czcionkę do użycia przez ImGui i zwraca na nią wskaźnik.
  *  @param fontPath Plik zawierający czcionkę.
@@ -20,6 +22,6 @@ void showSimulationConfigWindow(SimulationState &state, SimulationSettings &sett
  *  @param state stan w jakim znajduje się znaleźć symulacja
  *  @param speedMultiplier mnożnik szybkości z jaką powinna być wyświetlana symulacja
  * */
-void showSimulationControlWindow(SimulationState &state, int &speedMultiplier);
+void showSimulationControlWindow(SimulationState &state, int &speedMultiplier, const std::vector<glm::dvec2> &results);
 
 #endif

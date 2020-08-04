@@ -56,13 +56,13 @@ void showSimulationConfigWindow(SimulationState &state, SimulationSettings &sett
         tooltip("Czas od rozpoczęcia symulacji, po którym detektor rozpocznie pomiar ciśnienia.");
     }
     ImGui::Separator();
-    ImGui::SliderFloat("Krok symulacji", &settings.dt, 0.05f, 2, "δt = %.3f");
+    ImGui::SliderFloat("Krok symulacji", &settings.deltaT, 0.05f, 2, "δt = %.3f");
     if(ImGui::Button("ROZPOCZNIJ SYMULACJĘ", ImVec2(ImGui::GetWindowContentRegionWidth(), 0)))
         state = SimulationState::RUNNING;
     ImGui::End();
 }
 
-void showSimulationControlWindow(SimulationState &state, int &speedMultiplier)
+void showSimulationControlWindow(SimulationState &state, int &speedMultiplier, const std::vector<glm::dvec2> &results)
 {
     ImGui::Begin("Przebieg symulacji", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::SliderInt("Szybkość", &speedMultiplier, 1, 4, "%dx");
@@ -87,5 +87,12 @@ void showSimulationControlWindow(SimulationState &state, int &speedMultiplier)
     if(ImGui::Button("Zakończ symulację")) 
         state = SimulationState::STOPPED;
     ImGui::NewLine();
+
+    if(!results.empty())
+    {
+        ImGui::TextColored(HEADING_COLOR, "Wyniki");
+        ImGui::Text("p = %g", results.back().y);
+    }
+
     ImGui::End();
 }

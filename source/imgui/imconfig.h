@@ -69,11 +69,15 @@
 
 #define IM_VEC2_CLASS_EXTRA                                     \
         ImVec2(const glm::vec2& f) { x = f.x; y = f.y; }        \
-        operator glm::vec2() const { return glm::vec2(x,y); }
+        operator glm::vec2() const { return glm::vec2(x,y); }   \
+        ImVec2(const glm::dvec2& f) { x = static_cast<float>(f.x); y = static_cast<float>(f.y); }        \
+        operator glm::dvec2() const { return glm::dvec2(static_cast<double>(x), static_cast<double>(y)); }
 
 #define IM_VEC4_CLASS_EXTRA                                                 \
         ImVec4(const glm::vec4& f) { x = f.x; y = f.y; z = f.z; w = f.w; }  \
-        operator glm::vec4() const { return glm::vec4(x,y,z,w); }
+        operator glm::vec4() const { return glm::vec4(x,y,z,w); }           \
+        ImVec4(const glm::dvec4& f) { x = static_cast<float>(f.x); y = static_cast<float>(f.y); z = static_cast<float>(f.z); w = static_cast<float>(f.w); }  \
+        operator glm::dvec4() const { return glm::dvec4(static_cast<double>(x),static_cast<double>(y),static_cast<double>(z),static_cast<double>(w)); }
 
 //---- Use 32-bit vertex indices (default is 16-bit) is one way to allow large meshes with more than 64K vertices.
 // Your renderer back-end will need to support it (most example renderer back-ends support both 16/32-bit indices).
