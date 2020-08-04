@@ -26,7 +26,7 @@ struct SimulationSettings {
           detectorY = 20, 
           detectorHeight = 5,
           /// Krok czasowy
-          dt = 1;
+          delta_t = 1;
 
     int numParticles = 100,
         /// Ile kroków czasowych po rozpoczęciu symulacji detektor ma zacząć mierzyć ciśnienie
@@ -34,7 +34,7 @@ struct SimulationSettings {
 };
 
 srand(time(0));
-double R, d, delta_t, V;
+double R=1, V;
 double fRand(double fMin, double fMax)
 {
     double f = (double)rand() / RAND_MAX;
@@ -43,16 +43,10 @@ double fRand(double fMin, double fMax)
 class atom;
 class border {//(3)nakoncu border
 public:
-    double h = 0,
-        l = 0;
-    bool set(int a, int b) {
-        if (a / b >= 5) {
-            this->h = R * b;
-            this->l = R * a;
-            return 1;
-        }
-        else
-            return 0;
+    double h,d,l;
+    bool set() {
+        SimulationSettings a;
+        h = a.containerHeight, l = a.containerWidth,d=a.collisionTollerance;
     }
     void isColliding(atom* a) {
         if ((a->x.x) + d >= this->l || (a->x.x) - d <= 0) {
@@ -63,13 +57,18 @@ public:
             a->v.y = -(a->v.y);
         }
     }
-}box;
+};
 class atom {//(1)najpierw kolizje atom
 public:
     glm::dvec2 x, v;
+    float R = 1, d,delta_t;
     void set() {//cząsteczki mogą wpaść na siebie
-        x = glm::dvec2(fRand(0, box.l), fRand(0, box.h));
-        v = glm::dvec2(fRand(-V, V), fRand(-V, V));
+        SimulationSettings *a=new SimulationSettings;
+        d = a->collisionTollerance;
+        delta_t = a->delta_t;
+        x = glm::dvec2(fRand(0, a->containerWidth), fRand(0, a->containerHeight));
+        v = glm::dvec2(fRand(-a->maxInitialVelocity), a->maxInitialVelocity)), fRand(-a->maxInitialVelocity), a->maxInitialVelocity));
+        delete a;
     }
     void colision(atom* b) {
         if ((x - b->x).length <= 2 * R + d) {
@@ -88,22 +87,27 @@ public:
 };
 class line {// (2)póniej z line
 public:
-    double h, l, res = 0;
+    double h, l, res = 0,boxl;
     int time, collisions, M;
     void set(double h1, double l1, double M1) {
-        h = l,
-            time = 0,
+        SimulationSettings a;
+            h = a.detectorHeight,
+            l=a.detectorY,
+            time = 1,
             collisions = 0,
-            M = M1;
+            M = a.detectorDelay;
+            boxl = a.containerWidth;
     }
     double isColliding(atom* a) {
         if (time % M != 0) {
-            if ((a->x.y) + d >= h && (a->x.y) + d <= h + l && (a->x.x) + d >= box.l) {
+            if ((a->x.y) + d >= h && (a->x.y) + d <= h + l && (a->x.x) + d >= boxl) {
+                ++time;
                 res += 2 * a->v.x;
                 return -1.f;
             }
         }
         else {
+            time = 1;
             double res2 = res / (l * M);
             res = 0;
             return res2;
