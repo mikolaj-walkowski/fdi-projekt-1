@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <glm/glm.hpp>
 #include "simulation.hpp"
+#include <algorithm>
 
 double R=1, V;
 double fRand(double fMin, double fMax)
@@ -94,16 +95,69 @@ double Simulation::time() const
 
 double Simulation::detectorPressure() const 
 {
-    if(ticksPassed <= detectorDelay) return 0;
+    if(ticksPassed <= settings.detectorDelay) return 0;
     size_t measurementTime = (ticksPassed - settings.detectorDelay) * settings.deltaT;
-    else return detector.momentumAbsorbed / measurementTime / detector.l;
+    return detector.momentumAbsorbed / measurementTime / detector.l;
 }
 
-void Simulation::render(ImDrawList &drawList) const 
+/// Signum
+float sgn(float x)
 {
-    for(const auto &atom : atoms) 
-        drawList.AddCircle(atom.x, atom.R, ImGui::ColorConvertFloat4ToU32(ImVec4(1,1,0,1)));
+    if(x > 0) return  1;
+    if(x < 0) return -1;
+    return 0;
+}
 
-    drawList.AddRect(ImVec2(0,0), ImVec2(border.l, border.h), ImGui::ColorConvertFloat4ToU32(ImVec4(1,0,0,1)));
-    drawList.AddLine(ImVec2(detector.boxl,detector.h), ImVec2(detector.boxl,detector.h+detector.l), ImGui::ColorConvertFloat4ToU32(ImVec4(0,1,0,1)));
+// Funkcje na macierze transformacji w 2D
+glm::mat3 translate2D(glm::vec2 t) {
+    glm::mat3 result(1);
+    result[2] = glm::vec3(t,1);
+    return result;
+}
+
+glm::mat3 scale2D(glm::vec2 factors)
+{
+    glm::mat3 result(1);
+    result[0][0] = factors[0];
+    result[1][1] = factors[1];
+    return result;
+}
+
+/// Horyzontalny min: zwraca najmniejszy element z danego wektora
+float hmin(glm::vec2 v)
+{
+    return std::min(v.x, v.y);
+}
+
+const ImU32 BORDER_COLOR = ImGui::ColorConvertFloat4ToU32(ImVec4(1,0,0,1)),
+            PARTICLE_COLOR = ImGui::ColorConvertFloat4ToU32(ImVec4(1,1,0,1)),
+            DETECTOR_COLOR = ImGui::ColorConvertFloat4ToU32(ImVec4(0,1,0,1));
+
+void Simulation::render(ImDrawList &drawList, glm::vec2 position, glm::vec2 dimensions) const 
+{
+    // Skalujemy oraz przesuwamy zbiornik, detektor, atomy 
+    // tak by zmieściły się w zadanym obszarze przy zachowaniu proporcji
+    auto borderDimensions = glm::vec2(border.l, border.h);
+    float scale = hmin(dimensions / borderDimensions); 
+
+    auto borderDrawnDimensions = borderDimensions * scale;
+    position += (0.5f * (dimensions - borderDrawnDimensions));
+
+    glm::mat3 transform = 
+        translate2D(0.5f * borderDrawnDimensions + position) * 
+        scale2D(glm::vec2(scale, -scale)) * 
+        translate2D(-0.5f * borderDimensions);
+
+    for(const auto &atom : atoms) 
+    {
+        auto drawnPosition = glm::vec2(transform * glm::vec3(atom.x,1));
+        drawList.AddCircle(drawnPosition, atom.R * scale, PARTICLE_COLOR);
+    }
+
+    drawList.AddRect(glm::vec2(transform * glm::vec3(0,0,1)), glm::vec2(transform * glm::vec3(borderDimensions,1)), BORDER_COLOR);
+    drawList.AddLine(
+        glm::vec2(transform * glm::vec3(detector.boxl,detector.h, 1)), 
+        glm::vec2(transform * glm::vec3(detector.boxl,detector.h+detector.l,1)), 
+        DETECTOR_COLOR
+    );
 }
