@@ -68,11 +68,11 @@ void showSimulationConfigWindow(SimulationState &state, SimulationSettings &sett
     ImGui::End();
 }
 
-void showSimulationControlWindow(SimulationState &state, int &speedMultiplier, const std::vector<glm::dvec2> &results)
+void showSimulationControlWindow(SimulationState &state, float &targetTPS, const std::vector<glm::dvec2> &results)
 {
     ImGui::Begin("Przebieg symulacji", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-    ImGui::SliderInt("Szybkość", &speedMultiplier, 1, 4, "%dx");
-    tooltip("Zwiększa szybkość przebiegu symulacji. Nie ma to wpływu na krok czasowy oraz dokładność symulacji.");
+    ImGui::SliderFloat("Szybkość", &targetTPS, 20, 300, "%.1fTPS");
+    tooltip("Szybkość wyświetlania symulacji w krokach czasowych na sekundę.");
 
     switch(state) 
     {
