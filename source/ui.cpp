@@ -56,7 +56,13 @@ void showSimulationConfigWindow(SimulationState &state, SimulationSettings &sett
         tooltip("Czas od rozpoczęcia symulacji, po którym detektor rozpocznie pomiar ciśnienia.");
     }
     ImGui::Separator();
-    ImGui::SliderFloat("Krok symulacji", &settings.deltaT, 0.05f, 2, "δt = %.3f");
+
+    float k = 1/(settings.deltaT * settings.maxInitialVelocity);
+    k = std::max(1.0f, std::min(k, 100.0f));
+    ImGui::SliderFloat("Współczynnik kroku", &k, 1, 100, "κ = %.2f");
+    settings.deltaT = 1/(k * settings.maxInitialVelocity);
+    ImGui::Text("Krok symulacji: δt = %g", settings.deltaT);
+
     if(ImGui::Button("ROZPOCZNIJ SYMULACJĘ", ImVec2(ImGui::GetWindowContentRegionWidth(), 0)))
         state = SimulationState::RUNNING;
     ImGui::End();
