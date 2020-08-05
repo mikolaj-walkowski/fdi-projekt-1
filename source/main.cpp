@@ -1,3 +1,5 @@
+#include <ctime>
+#include <algorithm>
 #include <iostream>
 #include <exception>
 
@@ -66,7 +68,11 @@ int main(int argc, char** argv)
     std::vector<glm::dvec2> results;
 
     bool simulationRunning = false;
-    int simulationSpeed = 1;
+    float targetTPS = 60,
+          updateReloadLeft = 0;
+
+    auto t = clock();
+    float frameTime = 1/60.0f;
 
     //---------------------------------GŁÓWNA PĘTLA--------------------------------------
     while (!glfwWindowShouldClose(window))
@@ -88,16 +94,25 @@ int main(int argc, char** argv)
             break;
 
             case SimulationState::RUNNING:
-            for(int i=0; i<simulationSpeed; ++i)
             {
-                simulation.update();
-                results.push_back(glm::dvec2(simulation.time(), simulation.detectorPressure()));
+                float updateReloadTime = 1/targetTPS;
+                //std::cerr << "Update reload time: " << updateReloadTime << std::endl;
+                //std::cerr << "Update reload left: " << updateReloadLeft << std::endl;
+                //updateReloadLeft = std::min(updateReloadLeft, updateReloadTime);
+                for(;updateReloadLeft < frameTime; updateReloadLeft += updateReloadTime)
+                {
+                    //std::cerr << "t = " << t << std::endl;
+                    simulation.update();
+                    results.push_back(glm::dvec2(simulation.time(), simulation.detectorPressure()));
+                }
+                updateReloadLeft -= frameTime;
+                //std::cerr << "Update reload left: " << updateReloadLeft << std::endl;
             }
             //break pominięty celowo żeby żeby wykorzystać ten sam kod na renderowanie do RUNNING oraz PAUSED
             
             case SimulationState::PAUSED:
             simulation.render(*(ImGui::GetBackgroundDrawList()), glm::vec2(64), glm::vec2(fboSize) - 128.0f);
-            showSimulationControlWindow(state, simulationSpeed, results);
+            showSimulationControlWindow(state, targetTPS, results);
             break;
         }
 
@@ -109,6 +124,10 @@ int main(int argc, char** argv)
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        auto t2 = clock();
+        frameTime = static_cast<float>(t2 - t) / CLOCKS_PER_SEC;
+        t = t2;
     }
 
     return EXIT_SUCCESS;
