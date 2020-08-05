@@ -94,9 +94,9 @@ double Simulation::time() const
 
 double Simulation::detectorPressure() const 
 {
-    if(ticksPassed <= detectorDelay) return 0;
+    if(ticksPassed <= settings.detectorDelay) return 0;
     size_t measurementTime = (ticksPassed - settings.detectorDelay) * settings.deltaT;
-    else return detector.momentumAbsorbed / measurementTime / detector.l;
+    return detector.momentumAbsorbed / measurementTime / detector.l;
 }
 
 void Simulation::render(ImDrawList &drawList) const 
