@@ -22,8 +22,10 @@ void Border::tryCollide(Atom &a, double tollerance)
 
 void Atom::tryCollide(Atom &b, double tollerance) 
 {
-    if (glm::distance(x, b.x) <= R + b.R + tollerance) 
-    {
+    if (
+        glm::dot(v - b.v, b.x - x) > 0 && //Sprawdź czy ten atom leci w stronę drugiego atomu
+        glm::distance(x, b.x) <= R + b.R + tollerance
+    ) {
         auto n = glm::normalize(x - b.x);
         auto c1 = n * glm::dot(n, v);
         auto c2 = n * glm::dot(n, b.v);
