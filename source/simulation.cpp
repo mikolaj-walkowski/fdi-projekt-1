@@ -13,11 +13,17 @@ double fRand(double fMin, double fMax)
 
 void Border::tryCollide(Atom &a, double tollerance) 
 {
-    if ((a.x.x) + tollerance >= this->l || (a.x.x) - tollerance <= 0)
-        a.v.x = -(a.v.x);
+    if ((a.x.x) + a.R + tollerance >= this->l)
+        a.v.x = -abs(a.v.x);
 
-    if ((a.x.y) + tollerance >= this->h || (a.x.y) - tollerance <= 0)
-        a.v.y = -(a.v.y);
+    if((a.x.x) - a.R - tollerance <= 0)
+        a.v.x = abs(a.v.x);
+
+    if ((a.x.y) + a.R + tollerance >= this->h) 
+        a.v.y = -abs(a.v.y);
+
+    if((a.x.y) - a.R - tollerance <= 0)
+        a.v.y = abs(a.v.y);
 }
 
 void Atom::tryCollide(Atom &b, double tollerance) 
@@ -42,8 +48,14 @@ void Atom::update(double deltaT)
 }
 
 void Detector::tryCollide(Atom &a, double tollerance) {
-    if ((a.x.y) + tollerance >= h && (a.x.y) + tollerance <= h + l && (a.x.x) + tollerance >= boxl)
-        momentumAbsorbed += abs(2 * a.v.x);
+    if (
+        (a.x.y) + a.R + tollerance >= h && 
+        (a.x.y) - a.R - tollerance <= h + l && 
+        (a.x.x) + a.R + tollerance >= boxl &&
+        a.v.x >= 0
+    ) {
+        momentumAbsorbed += 2 * a.v.x;
+    }
 }
 
 glm::dvec2 dvec2Rand(double maxLength) 
@@ -79,9 +91,9 @@ void Simulation::update()
     for(auto &atom : atoms) 
     {
         atom.update(settings.deltaT);
-        border.tryCollide(atom, settings.collisionTollerance);
         if(ticksPassed > settings.detectorDelay)
             detector.tryCollide(atom, settings.collisionTollerance);
+        border.tryCollide(atom, settings.collisionTollerance);
     }
 
     for(size_t i=0; i<atoms.size()-1; ++i)
