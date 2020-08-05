@@ -65,7 +65,13 @@ public:
     void update();
     double time() const;
     double detectorPressure() const;
-    void render(ImDrawList &drawList) const;
+    /** Wyświetla zbiornik, atomy oraz detektor. Argumenty position oraz dimensions definiują 
+     *  obszar w jakim zbiornik etc. mogą zostać wyrenderowane.
+     *  @param drawList ImDrawList użyty do wyrenderowania pojemnika.
+     *  @param position Lewy górny róg obszaru w którym można renderować.
+     *  @param dimensions Długość i szerokość obszaru w którym można renderować.
+     */
+    void render(ImDrawList &drawList, glm::vec2 position, glm::vec2 dimensions) const;
 
 private:
     SimulationSettings settings;

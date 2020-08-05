@@ -18,13 +18,6 @@ void errorCallback(int error, const char* description)
     fprintf(stderr, "GLFW ERROR #%d: %s\n", error, description);
 }
 
-int fboWidth, fboHeight;
-void fboSizeCallback(GLFWwindow* window, int width, int height) 
-{
-    fboWidth = width;
-    fboHeight = height;
-}
-
 int main(int argc, char** argv)
 {
     // Inicjalizacja GLFW
@@ -45,8 +38,7 @@ int main(int argc, char** argv)
     );
     onExit(glfwDestroyWindow(window));
     glfwMakeContextCurrent(window);
-    glfwGetFramebufferSize(window, &fboWidth, &fboHeight);
-    glfwSetFramebufferSizeCallback(window, fboSizeCallback);
+    glm::ivec2 fboSize;
 
     // Ładowanie OpenGLa
     enforce(gladLoadGL(), std::runtime_error("Failed to load OpenGL!"));
@@ -79,6 +71,7 @@ int main(int argc, char** argv)
     //---------------------------------GŁÓWNA PĘTLA--------------------------------------
     while (!glfwWindowShouldClose(window))
     {
+        glfwGetFramebufferSize(window, &fboSize.x, &fboSize.y);
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
@@ -100,18 +93,16 @@ int main(int argc, char** argv)
                 simulation.update();
                 results.push_back(glm::dvec2(simulation.time(), simulation.detectorPressure()));
             }
-            simulation.render(*(ImGui::GetBackgroundDrawList()));
-            showSimulationControlWindow(state, simulationSpeed, results);
-            break;
-
+            //break pominięty celowo żeby żeby wykorzystać ten sam kod na renderowanie do RUNNING oraz PAUSED
+            
             case SimulationState::PAUSED:
-            simulation.render(*(ImGui::GetBackgroundDrawList()));
+            simulation.render(*(ImGui::GetBackgroundDrawList()), glm::vec2(64), glm::vec2(fboSize) - 128.0f);
             showSimulationControlWindow(state, simulationSpeed, results);
             break;
         }
 
         ImGui::Render();
-        glViewport(0, 0, fboWidth, fboHeight);
+        glViewport(0, 0, fboSize.x, fboSize.y);
         glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
