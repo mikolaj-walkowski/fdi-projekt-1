@@ -13,6 +13,7 @@
 #include <evil_macros.hpp>
 #include <simulation.hpp>
 #include <ui.hpp>
+#include <camera.hpp>
 
 // Listenery do GLFW
 void errorCallback(int error, const char* description)
@@ -73,6 +74,9 @@ int main(int argc, char** argv)
 
     auto t = clock();
     float frameTime = 1/60.0f;
+    bool resetPos = false;
+
+    Camera camera;
 
     //---------------------------------GŁÓWNA PĘTLA--------------------------------------
     while (!glfwWindowShouldClose(window))
@@ -96,9 +100,6 @@ int main(int argc, char** argv)
             case SimulationState::RUNNING:
             {
                 float updateReloadTime = 1/targetTPS;
-                //std::cerr << "Update reload time: " << updateReloadTime << std::endl;
-                //std::cerr << "Update reload left: " << updateReloadLeft << std::endl;
-                //updateReloadLeft = std::min(updateReloadLeft, updateReloadTime);
                 for(;updateReloadLeft < frameTime; updateReloadLeft += updateReloadTime)
                 {
                     //std::cerr << "t = " << t << std::endl;
@@ -106,13 +107,16 @@ int main(int argc, char** argv)
                     results.push_back(glm::dvec2(simulation.time(), simulation.detectorPressure()));
                 }
                 updateReloadLeft -= frameTime;
-                //std::cerr << "Update reload left: " << updateReloadLeft << std::endl;
             }
             //break pominięty celowo żeby żeby wykorzystać ten sam kod na renderowanie do RUNNING oraz PAUSED
             
             case SimulationState::PAUSED:
-            simulation.render(*(ImGui::GetBackgroundDrawList()), glm::vec2(64), glm::vec2(fboSize) - 128.0f);
-            showSimulationControlWindow(state, targetTPS, results);
+            camera.update(400*frameTime, pow(2,frameTime));
+            glm::vec2 lo = camera.transform(glm::vec2(64), glm::vec2(fboSize)), 
+                      hi = camera.transform(glm::vec2(fboSize) - 64.0f, glm::vec2(fboSize));
+            simulation.render(*(ImGui::GetBackgroundDrawList()), lo, hi-lo);
+            showSimulationControlWindow(state, targetTPS, resetPos, results);
+            if(resetPos) camera.reset();
             break;
         }
 

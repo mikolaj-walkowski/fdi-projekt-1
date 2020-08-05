@@ -68,7 +68,7 @@ void showSimulationConfigWindow(SimulationState &state, SimulationSettings &sett
     ImGui::End();
 }
 
-void showSimulationControlWindow(SimulationState &state, float &targetTPS, const std::vector<glm::dvec2> &results)
+void showSimulationControlWindow(SimulationState &state, float &targetTPS, bool &resetPos, const std::vector<glm::dvec2> &results)
 {
     ImGui::Begin("Przebieg symulacji", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::SliderFloat("Szybkość", &targetTPS, 20, 300, "%.1fTPS");
@@ -92,7 +92,8 @@ void showSimulationControlWindow(SimulationState &state, float &targetTPS, const
     ImGui::SameLine();
     if(ImGui::Button("Zakończ symulację")) 
         state = SimulationState::STOPPED;
-    ImGui::NewLine();
+    ImGui::SameLine();
+    resetPos = ImGui::Button("Resetuj kamerę");
 
     if(!results.empty())
     {

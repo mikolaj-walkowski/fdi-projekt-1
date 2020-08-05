@@ -22,6 +22,6 @@ void showSimulationConfigWindow(SimulationState &state, SimulationSettings &sett
  *  @param state stan w jakim znajduje się znaleźć symulacja
  *  @param targetTPS szybkość z jaką powinna być wyświetlana symulacja w krokach czasowych na sekundę
  * */
-void showSimulationControlWindow(SimulationState &state, float &targetTPS, const std::vector<glm::dvec2> &results);
+void showSimulationControlWindow(SimulationState &state, float &targetTPS, bool &resetPos, const std::vector<glm::dvec2> &results);
 
 #endif
