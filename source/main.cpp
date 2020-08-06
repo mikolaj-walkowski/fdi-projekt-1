@@ -70,8 +70,7 @@ int main(int argc, char** argv)
     std::vector<SimulationResult> results;
 
     bool simulationRunning = false;
-    float targetTPS = 60,
-          updateReloadLeft = 0;
+    float updateReloadLeft = 0;
 
     auto t = clock();
     float frameTime = 1/60.0f;
@@ -107,7 +106,7 @@ int main(int argc, char** argv)
 
             case SimulationState::RUNNING:
             {
-                float updateReloadTime = 1/targetTPS;
+                float updateReloadTime = 1/controlWindow.targetTPS();
                 for(;updateReloadLeft < frameTime; updateReloadLeft += updateReloadTime)
                 {
                     simulation.update();
