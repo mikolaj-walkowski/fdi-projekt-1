@@ -77,6 +77,8 @@ int main(int argc, char** argv)
     bool resetPos = false;
 
     Camera camera;
+    SimulationControlWindow controlWindow;
+    controlWindow.resetCamera = [&camera](){camera.reset();};
 
     //---------------------------------GŁÓWNA PĘTLA--------------------------------------
     while (!glfwWindowShouldClose(window))
@@ -102,7 +104,6 @@ int main(int argc, char** argv)
                 float updateReloadTime = 1/targetTPS;
                 for(;updateReloadLeft < frameTime; updateReloadLeft += updateReloadTime)
                 {
-                    //std::cerr << "t = " << t << std::endl;
                     simulation.update();
                     results.push_back(glm::dvec2(simulation.time(), simulation.detectorPressure()));
                 }
@@ -115,8 +116,7 @@ int main(int argc, char** argv)
             glm::vec2 lo = camera.transform(glm::vec2(64), glm::vec2(fboSize)), 
                       hi = camera.transform(glm::vec2(fboSize) - 64.0f, glm::vec2(fboSize));
             simulation.render(*(ImGui::GetBackgroundDrawList()), lo, hi-lo);
-            showSimulationControlWindow(state, targetTPS, resetPos, results);
-            if(resetPos) camera.reset();
+            controlWindow.show(state,results);
             break;
         }
 

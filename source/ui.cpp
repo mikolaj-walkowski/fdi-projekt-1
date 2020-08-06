@@ -68,32 +68,39 @@ void showSimulationConfigWindow(SimulationState &state, SimulationSettings &sett
     ImGui::End();
 }
 
-void showSimulationControlWindow(SimulationState &state, float &targetTPS, bool &resetPos, const std::vector<glm::dvec2> &results)
+void SimulationControlWindow::show(SimulationState &state, const std::vector<glm::dvec2> &results)
 {
     ImGui::Begin("Przebieg symulacji", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-    ImGui::SliderFloat("Szybkość", &targetTPS, 20, 300, "%.1fTPS");
+    ImGui::SliderFloat("Szybkość", &_targetTPS, 20, 300, "%.1fTPS");
     tooltip("Szybkość wyświetlania symulacji w krokach czasowych na sekundę.");
 
+    auto buttonSize = ImVec2(ImGui::GetWindowContentRegionWidth()/2-8, 0);
     switch(state) 
     {
         case SimulationState::RUNNING:
-        if(ImGui::Button("Zatrzymaj")) 
+        if(ImGui::Button("Zatrzymaj", buttonSize)) 
             state = SimulationState::PAUSED;
         tooltip("Tymczasowo wstrzymuje przebieg symulacji.");
         break;
 
         case SimulationState::PAUSED:
-        if(ImGui::Button("Wznów"))
+        if(ImGui::Button("Wznów", buttonSize))
             state = SimulationState::RUNNING;
         break;
 
         default: assertf(false, "Nieprawidłowy stan: %s", simulationStateToString[state]);
     }
     ImGui::SameLine();
-    if(ImGui::Button("Zakończ symulację")) 
+    if(ImGui::Button("Zakończ symulację", buttonSize)) 
         state = SimulationState::STOPPED;
+
+    if(ImGui::Button("Resetuj kamerę", buttonSize)) 
+        resetCamera();
     ImGui::SameLine();
-    resetPos = ImGui::Button("Resetuj kamerę");
+
+    bool doExportResults = ImGui::Button("Eksportuj wyniki", buttonSize);
+    tooltip("Eksportuje wyniki do pliku .CSV");
+    if(doExportResults) exportResults();
 
     if(!results.empty())
     {
@@ -102,4 +109,9 @@ void showSimulationControlWindow(SimulationState &state, float &targetTPS, bool 
     }
 
     ImGui::End();
+}
+
+float SimulationControlWindow::targetTPS() const
+{
+    return _targetTPS;
 }
