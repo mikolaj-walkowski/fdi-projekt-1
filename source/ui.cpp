@@ -1,8 +1,14 @@
 #include <cassert>
+#include <cstring>
 #include <algorithm>
+#include <vector>
 #include <imgui.h>
 #include <ui.hpp>
 #include <evil_macros.hpp>
+
+#define NOMINMAX
+#include <windows.h>
+#include <direct.h>
 
 #define HEADING_COLOR ImVec4(1,1,0,1)
 
@@ -56,43 +62,132 @@ void showSimulationConfigWindow(SimulationState &state, SimulationSettings &sett
         tooltip("Czas od rozpoczęcia symulacji, po którym detektor rozpocznie pomiar ciśnienia.");
     }
     ImGui::Separator();
-    ImGui::SliderFloat("Krok symulacji", &settings.deltaT, 0.05f, 2, "δt = %.3f");
+
+    float k = 1/(settings.deltaT * settings.maxInitialVelocity);
+    k = std::max(1.0f, std::min(k, 100.0f));
+    ImGui::SliderFloat("Współczynnik kroku", &k, 1, 100, "κ = %.2f");
+    settings.deltaT = 1/(k * settings.maxInitialVelocity);
+    ImGui::Text("Krok symulacji: δt = %g", settings.deltaT);
+
     if(ImGui::Button("ROZPOCZNIJ SYMULACJĘ", ImVec2(ImGui::GetWindowContentRegionWidth(), 0)))
         state = SimulationState::RUNNING;
     ImGui::End();
 }
 
-void showSimulationControlWindow(SimulationState &state, int &speedMultiplier, const std::vector<glm::dvec2> &results)
+void SimulationControlWindow::show(SimulationState &state, const std::vector<SimulationResult> &results)
 {
     ImGui::Begin("Przebieg symulacji", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-    ImGui::SliderInt("Szybkość", &speedMultiplier, 1, 4, "%dx");
-    tooltip("Zwiększa szybkość przebiegu symulacji. Nie ma to wpływu na krok czasowy oraz dokładność symulacji.");
+    ImGui::SliderFloat("Szybkość", &_targetTPS, 20, 300, "%.1fTPS");
+    tooltip("Szybkość wyświetlania symulacji w krokach czasowych na sekundę.");
 
+    auto buttonSize = ImVec2(ImGui::GetWindowContentRegionWidth()/2-8, 0);
     switch(state) 
     {
         case SimulationState::RUNNING:
-        if(ImGui::Button("Zatrzymaj")) 
+        if(ImGui::Button("Zatrzymaj", buttonSize)) 
             state = SimulationState::PAUSED;
         tooltip("Tymczasowo wstrzymuje przebieg symulacji.");
         break;
 
         case SimulationState::PAUSED:
-        if(ImGui::Button("Wznów"))
+        if(ImGui::Button("Wznów", buttonSize))
             state = SimulationState::RUNNING;
         break;
 
         default: assertf(false, "Nieprawidłowy stan: %s", simulationStateToString[state]);
     }
     ImGui::SameLine();
-    if(ImGui::Button("Zakończ symulację")) 
+    if(ImGui::Button("Zakończ symulację", buttonSize)) 
         state = SimulationState::STOPPED;
-    ImGui::NewLine();
+
+    if(ImGui::Button("Resetuj kamerę", buttonSize)) 
+        resetCamera();
+    ImGui::SameLine();
+
+    bool doExportResults = ImGui::Button("Eksportuj wyniki", buttonSize);
+    tooltip("Eksportuje wyniki do pliku .CSV");
+    if(doExportResults) exportResults();
 
     if(!results.empty())
     {
         ImGui::TextColored(HEADING_COLOR, "Wyniki");
-        ImGui::Text("p = %g", results.back().y);
+        ImGui::Text("p = %g", results.back().averagePressure);
     }
 
     ImGui::End();
+}
+
+float SimulationControlWindow::targetTPS() const
+{
+    return _targetTPS;
+}
+
+std::string toLower(std::string str)
+{
+    for(auto &c : str) c = tolower(c);
+    return str;
+}
+
+void ensurePathHasExtension(std::string &path, const std::string &extension)
+{
+    int i = static_cast<int>(path.size()) - 1;
+    for(; i>=0; --i)
+    {
+        if(path[i] == '\\' || path[i] == '/') //Nie znaleziono rozszerzenia
+        {
+            path += extension;
+            return;
+        }
+        if(path[i] == '.')
+        {
+            if(toLower(path.substr(i)) != toLower(extension)) //Jeśli rozszerzenie się nie zgadza, dodaj nowe rozszerzenie na końcu
+                path += extension;
+            return;
+        }
+    }
+    // Brak kropki/slasha/backslasha -> ścieżka względna do cwd bez rozszerzenia
+    path += extension;
+    return;
+}
+
+const std::string extensions[] = {
+    "",
+    ".csv",
+    ".txt"
+};
+
+void showSimulationResultExportWindow(std::function<void(const std::string&)> doExport)
+{
+    static char cpath[MAX_PATH];
+    static char cwd[MAX_PATH];
+    static OPENFILENAME ofn;
+    static bool initialised = false;
+
+    ZeroMemory(cpath, sizeof(cpath));
+    
+    if(!initialised)
+    {
+        ZeroMemory(cwd, sizeof(cpath));
+        _getcwd(cwd, sizeof(cwd));
+        strcat(cwd, "\\");
+
+        ZeroMemory(&ofn, sizeof(ofn));
+        ofn.lStructSize = sizeof(OPENFILENAME);
+        ofn.hwndOwner = NULL;
+        ofn.lpstrFilter = "Plik CSV\0*.csv\0Plik tekstowy\0*.txt\0\0";
+        ofn.lpstrInitialDir = cwd;
+        ofn.lpstrFile = cpath;
+        ofn.nMaxFile = sizeof(cpath);
+        ofn.lpstrTitle = "Zapisz wyniki symulacji";
+        ofn.Flags = OFN_DONTADDTORECENT;
+
+        initialised = true;
+    }
+    if(GetSaveFileNameA(&ofn))
+    {
+        std::string path(cpath);
+        ensurePathHasExtension(path, extensions[ofn.nFilterIndex]);
+        doExport(std::string(path));
+    }
+    else assertf(CommDlgExtendedError() == 0, "Dialog box error");
 }

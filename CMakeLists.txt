@@ -53,6 +53,8 @@ set(
   source/main.cpp
   source/ui.cpp
   source/simulation.cpp
+  source/camera.cpp
+  source/export.cpp
 )
 add_executable(${CMAKE_PROJECT_NAME} ${IMGUI_SOURCES} ${PROJECT_SOURCES})
 

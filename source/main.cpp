@@ -1,3 +1,5 @@
+#include <ctime>
+#include <algorithm>
 #include <iostream>
 #include <exception>
 
@@ -11,18 +13,13 @@
 #include <evil_macros.hpp>
 #include <simulation.hpp>
 #include <ui.hpp>
+#include <camera.hpp>
+#include <export.hpp>
 
 // Listenery do GLFW
 void errorCallback(int error, const char* description)
 {
     fprintf(stderr, "GLFW ERROR #%d: %s\n", error, description);
-}
-
-int fboWidth, fboHeight;
-void fboSizeCallback(GLFWwindow* window, int width, int height) 
-{
-    fboWidth = width;
-    fboHeight = height;
 }
 
 int main(int argc, char** argv)
@@ -45,8 +42,7 @@ int main(int argc, char** argv)
     );
     onExit(glfwDestroyWindow(window));
     glfwMakeContextCurrent(window);
-    glfwGetFramebufferSize(window, &fboWidth, &fboHeight);
-    glfwSetFramebufferSizeCallback(window, fboSizeCallback);
+    glm::ivec2 fboSize;
 
     // Ładowanie OpenGLa
     enforce(gladLoadGL(), std::runtime_error("Failed to load OpenGL!"));
@@ -71,14 +67,29 @@ int main(int argc, char** argv)
     auto state = SimulationState::STOPPED;
     SimulationSettings settings;
     Simulation simulation;
-    std::vector<glm::dvec2> results;
+    std::vector<SimulationResult> results;
 
     bool simulationRunning = false;
-    int simulationSpeed = 1;
+    float targetTPS = 60,
+          updateReloadLeft = 0;
+
+    auto t = clock();
+    float frameTime = 1/60.0f;
+    bool resetPos = false;
+
+    Camera camera;
+    SimulationControlWindow controlWindow;
+    controlWindow.resetCamera = [&camera](){camera.reset();};
+    controlWindow.exportResults = [&results](){
+        showSimulationResultExportWindow([&results](const auto &path){
+            saveSimulationResultsToCsv(path, results);
+        });
+    };
 
     //---------------------------------GŁÓWNA PĘTLA--------------------------------------
     while (!glfwWindowShouldClose(window))
     {
+        glfwGetFramebufferSize(window, &fboSize.x, &fboSize.y);
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
@@ -95,29 +106,38 @@ int main(int argc, char** argv)
             break;
 
             case SimulationState::RUNNING:
-            for(int i=0; i<simulationSpeed; ++i)
             {
-                simulation.update();
-                results.push_back(glm::dvec2(simulation.time(), simulation.detectorPressure()));
+                float updateReloadTime = 1/targetTPS;
+                for(;updateReloadLeft < frameTime; updateReloadLeft += updateReloadTime)
+                {
+                    simulation.update();
+                    results.push_back({simulation.time(), simulation.detectorPressure()});
+                }
+                updateReloadLeft -= frameTime;
             }
-            simulation.render(*(ImGui::GetBackgroundDrawList()));
-            showSimulationControlWindow(state, simulationSpeed, results);
-            break;
-
+            //break pominięty celowo żeby żeby wykorzystać ten sam kod na renderowanie do RUNNING oraz PAUSED
+            
             case SimulationState::PAUSED:
-            simulation.render(*(ImGui::GetBackgroundDrawList()));
-            showSimulationControlWindow(state, simulationSpeed, results);
+            camera.update(400*frameTime, pow(2,frameTime));
+            glm::vec2 lo = camera.transform(glm::vec2(64), glm::vec2(fboSize)), 
+                      hi = camera.transform(glm::vec2(fboSize) - 64.0f, glm::vec2(fboSize));
+            simulation.render(*(ImGui::GetBackgroundDrawList()), lo, hi-lo);
+            controlWindow.show(state,results);
             break;
         }
 
         ImGui::Render();
-        glViewport(0, 0, fboWidth, fboHeight);
+        glViewport(0, 0, fboSize.x, fboSize.y);
         glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        auto t2 = clock();
+        frameTime = static_cast<float>(t2 - t) / CLOCKS_PER_SEC;
+        t = t2;
     }
 
     return EXIT_SUCCESS;
