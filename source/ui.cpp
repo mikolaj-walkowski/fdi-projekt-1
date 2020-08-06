@@ -1,8 +1,14 @@
 #include <cassert>
+#include <cstring>
 #include <algorithm>
+#include <vector>
 #include <imgui.h>
 #include <ui.hpp>
 #include <evil_macros.hpp>
+
+#define NOMINMAX
+#include <windows.h>
+#include <direct.h>
 
 #define HEADING_COLOR ImVec4(1,1,0,1)
 
@@ -68,7 +74,7 @@ void showSimulationConfigWindow(SimulationState &state, SimulationSettings &sett
     ImGui::End();
 }
 
-void SimulationControlWindow::show(SimulationState &state, const std::vector<glm::dvec2> &results)
+void SimulationControlWindow::show(SimulationState &state, const std::vector<SimulationResult> &results)
 {
     ImGui::Begin("Przebieg symulacji", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::SliderFloat("Szybkość", &_targetTPS, 20, 300, "%.1fTPS");
@@ -105,7 +111,7 @@ void SimulationControlWindow::show(SimulationState &state, const std::vector<glm
     if(!results.empty())
     {
         ImGui::TextColored(HEADING_COLOR, "Wyniki");
-        ImGui::Text("p = %g", results.back().y);
+        ImGui::Text("p = %g", results.back().averagePressure);
     }
 
     ImGui::End();
@@ -114,4 +120,74 @@ void SimulationControlWindow::show(SimulationState &state, const std::vector<glm
 float SimulationControlWindow::targetTPS() const
 {
     return _targetTPS;
+}
+
+std::string toLower(std::string str)
+{
+    for(auto &c : str) c = tolower(c);
+    return str;
+}
+
+void ensurePathHasExtension(std::string &path, const std::string &extension)
+{
+    int i = static_cast<int>(path.size()) - 1;
+    for(; i>=0; --i)
+    {
+        if(path[i] == '\\' || path[i] == '/') //Nie znaleziono rozszerzenia
+        {
+            path += extension;
+            return;
+        }
+        if(path[i] == '.')
+        {
+            if(toLower(path.substr(i)) != toLower(extension)) //Jeśli rozszerzenie się nie zgadza, dodaj nowe rozszerzenie na końcu
+                path += extension;
+            return;
+        }
+    }
+    // Brak kropki/slasha/backslasha -> ścieżka względna do cwd bez rozszerzenia
+    path += extension;
+    return;
+}
+
+const std::string extensions[] = {
+    "",
+    ".csv",
+    ".txt"
+};
+
+void showSimulationResultExportWindow(std::function<void(const std::string&)> doExport)
+{
+    static char cpath[MAX_PATH];
+    static char cwd[MAX_PATH];
+    static OPENFILENAME ofn;
+    static bool initialised = false;
+
+    ZeroMemory(cpath, sizeof(cpath));
+    
+    if(!initialised)
+    {
+        ZeroMemory(cwd, sizeof(cpath));
+        _getcwd(cwd, sizeof(cwd));
+        strcat(cwd, "\\");
+
+        ZeroMemory(&ofn, sizeof(ofn));
+        ofn.lStructSize = sizeof(OPENFILENAME);
+        ofn.hwndOwner = NULL;
+        ofn.lpstrFilter = "Plik CSV\0*.csv\0Plik tekstowy\0*.txt\0\0";
+        ofn.lpstrInitialDir = cwd;
+        ofn.lpstrFile = cpath;
+        ofn.nMaxFile = sizeof(cpath);
+        ofn.lpstrTitle = "Zapisz wyniki symulacji";
+        ofn.Flags = OFN_DONTADDTORECENT;
+
+        initialised = true;
+    }
+    if(GetSaveFileNameA(&ofn))
+    {
+        std::string path(cpath);
+        ensurePathHasExtension(path, extensions[ofn.nFilterIndex]);
+        doExport(std::string(path));
+    }
+    else assertf(CommDlgExtendedError() == 0, "Dialog box error");
 }

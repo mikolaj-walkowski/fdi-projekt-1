@@ -23,7 +23,7 @@ class SimulationControlWindow
 {
     public:
 
-    void show(SimulationState &state, const std::vector<glm::dvec2> &results);
+    void show(SimulationState &state, const std::vector<SimulationResult> &results);
 
     float targetTPS() const;
 
@@ -33,5 +33,7 @@ class SimulationControlWindow
     private:
     float _targetTPS = 60;
 };
+
+void showSimulationResultExportWindow(std::function<void(const std::string&)> doExport);
 
 #endif

@@ -14,6 +14,7 @@
 #include <simulation.hpp>
 #include <ui.hpp>
 #include <camera.hpp>
+#include <export.hpp>
 
 // Listenery do GLFW
 void errorCallback(int error, const char* description)
@@ -66,7 +67,7 @@ int main(int argc, char** argv)
     auto state = SimulationState::STOPPED;
     SimulationSettings settings;
     Simulation simulation;
-    std::vector<glm::dvec2> results;
+    std::vector<SimulationResult> results;
 
     bool simulationRunning = false;
     float targetTPS = 60,
@@ -79,6 +80,11 @@ int main(int argc, char** argv)
     Camera camera;
     SimulationControlWindow controlWindow;
     controlWindow.resetCamera = [&camera](){camera.reset();};
+    controlWindow.exportResults = [&results](){
+        showSimulationResultExportWindow([&results](const auto &path){
+            saveSimulationResultsToCsv(path, results);
+        });
+    };
 
     //---------------------------------GŁÓWNA PĘTLA--------------------------------------
     while (!glfwWindowShouldClose(window))
@@ -105,7 +111,7 @@ int main(int argc, char** argv)
                 for(;updateReloadLeft < frameTime; updateReloadLeft += updateReloadTime)
                 {
                     simulation.update();
-                    results.push_back(glm::dvec2(simulation.time(), simulation.detectorPressure()));
+                    results.push_back({simulation.time(), simulation.detectorPressure()});
                 }
                 updateReloadLeft -= frameTime;
             }

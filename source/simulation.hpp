@@ -55,6 +55,12 @@ public:
     void tryCollide(Atom &a, double tollerance);
 };
 
+struct SimulationResult
+{
+    double time,
+           averagePressure;
+};
+
 /** Obecny stan symulacji: cząstki, detektor, ustawienia początkowe, etc. */
 class Simulation 
 {
