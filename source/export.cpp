@@ -1,8 +1,10 @@
 #include "export.hpp"
-#include <iostream>
+#include <fstream>
 
-//TODO: implementacja
 void saveSimulationResultsToCsv(const std::string &path, const std::vector<SimulationResult> &results)
 {
-    std::cerr << "Zapisywanie wyników do \"" << path << "\"!" << std::endl;
+    std::ofstream out(path);
+    out << "Czas,\"Średnie ciśnienie\";" << std::endl;
+    for(const auto &result : results)
+        out << result.time << "," << result.averagePressure << ";" << std::endl;
 }
