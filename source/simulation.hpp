@@ -38,6 +38,7 @@ class Atom {//(1)najpierw kolizje atom
 public:
     glm::dvec2 x, v;
     double R = 1;
+    bool isCollidingBottom;
 
     void tryCollide(Atom &b, double tollerance);
     void update(double deltaT);

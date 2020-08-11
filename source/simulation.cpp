@@ -23,14 +23,17 @@ void Border::tryCollide(Atom &a, double tollerance)
     if ((a.x.y) + a.R + tollerance >= this->h) 
         a.v.y = -abs(a.v.y);
 
-    if((a.x.y) - a.R - tollerance <= 0)
+    if ((a.x.y) - a.R - tollerance <= 0) {
         a.v.y = abs(a.v.y);
+        a.isCollidingBottom = 1;
+    }
 }
 
 void Atom::tryCollide(Atom &b, double tollerance) 
 {
     if (
         glm::dot(v - b.v, b.x - x) > 0 && //Sprawdź czy ten atom leci w stronę drugiego atomu
+        //co jeżeli atom który sprawdzamy odsuwa się wolniej od atomu który go uderza 
         glm::distance(x, b.x) <= R + b.R + tollerance
     ) {
         auto n = glm::normalize(x - b.x);
@@ -41,11 +44,19 @@ void Atom::tryCollide(Atom &b, double tollerance)
     }
 }
 
-void Atom::update(double deltaT) 
+void Atom::update(double deltaT)
 {
+    if(!isCollidingBottom)
+    {
     x += v * deltaT;
     v.y -= deltaT;
     x.x -= pow(deltaT, 2) / 2;
+    }
+    else {
+        isCollidingBottom = 0;
+        x += v * deltaT;
+    }
+    //wydaje mi się że problemem jest to że atom przyśpiesza nawet jak jest w stanie spoczynku na dolnej krawędzi zbiornika to powinno to naprawić
 }
 
 void Detector::tryCollide(Atom &a, double tollerance) {
