@@ -113,7 +113,8 @@ void SimulationControlWindow::show(SimulationState &state, const std::vector<Sim
         ImGui::TextColored(HEADING_COLOR, "Wyniki");
         ImGui::Text("p = %g", results.back().averagePressure);
     }
-
+    ImGui::TextColored(HEADING_COLOR, "Energia Całkowita");            //Debug Fizyki
+    ImGui::Text("p = %g", TotalEnergy1);                               //Debug Fizyki
     ImGui::End();
 }
 

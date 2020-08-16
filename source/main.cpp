@@ -70,7 +70,7 @@ int main(int argc, char** argv)
     std::vector<SimulationResult> results;
 
     bool simulationRunning = false;
-    float updateReloadLeft = 0;
+    float updateReloadLeft = 0;\
 
     auto t = clock();
     float frameTime = 1/60.0f;

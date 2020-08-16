@@ -6,6 +6,7 @@
 #include <algorithm>
 
 double R=1, V;
+double ToltalEnergy1 ;//do debugu
 double fRand(double fMin, double fMax)
 {
     double f = (double)rand() / RAND_MAX;
@@ -46,6 +47,7 @@ void Atom::tryCollide(Atom &b, double tollerance)
 
 void Atom::update(double deltaT)
 {
+    ToltalEnergy1 += x.x + (pow(v.length,2)/2.f);           //debug fizyki
     if(!isCollidingBottom)
     {
     x += v * deltaT;
@@ -100,6 +102,7 @@ void Simulation::init(const SimulationSettings &settings)
 void Simulation::update() 
 {
     ++ticksPassed;
+    ToltalEnergy1 = 0;                          //debug fizyki
     for(auto &atom : atoms) 
     {
         atom.update(settings.deltaT);
