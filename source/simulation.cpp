@@ -47,7 +47,7 @@ void Atom::tryCollide(Atom &b, double tollerance)
 
 void Atom::update(double deltaT)
 {
-    ToltalEnergy1 += x.x + (pow(v.length,2)/2.f);           //debug fizyki
+    ToltalEnergy1 += x.y + (pow(glm::length(v),2)/2.f);           //debug fizyki
     if(!isCollidingBottom)
     {
     x += v * deltaT;
